@@ -1,0 +1,5 @@
+time_table:
+     monday:    [['10:00', IN],
+                 ['07:30', OUT]]
+     wednesday: [['06:00', IN],
+                 ['20:00', OUT]]
