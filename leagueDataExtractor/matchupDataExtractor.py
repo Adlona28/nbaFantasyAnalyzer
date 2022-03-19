@@ -4,6 +4,7 @@ import yaml
 import logging
 from bs4 import BeautifulSoup
 import pandas as pd
+import datetime
 
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -59,9 +60,17 @@ def _login(driver, settings):
 
     _wait_page_loads()
 
-    password = driver.find_element_by_name("password")
-    password.send_keys(settings['password'])
-    driver.find_element_by_id("login-signin").send_keys(Keys.RETURN)
+    try:
+        password = driver.find_element_by_name("password")
+        password.send_keys(settings['password'])
+        driver.find_element_by_id("login-signin").send_keys(Keys.RETURN)
+
+    except:
+        print("I can't find the password box, please, resolve captcha")
+        input('Press Enter to continue after resolving captcha.\n')
+        password = driver.find_element_by_name("password")
+        password.send_keys(settings['password'])
+        driver.find_element_by_id("login-signin").send_keys(Keys.RETURN)
 
 
 def _open_matchup(driver):
@@ -83,24 +92,33 @@ def _update_clock(driver):
     _wait_page_loads()
 
 def _get_result_info(driver):
-	soup = BeautifulSoup(driver.page_source, 'lxml')
+    soup = BeautifulSoup(driver.page_source, 'lxml')
     tables = soup.find_all('table')
     dfs = pd.read_html(str(tables))
-    print(dfs[1])
     return dfs[1]
 
 def _get_week_info(driver, weekLinks):
-'https://basketball.fantasysports.yahoo.com/nba/23349/matchup?week=21&date=2022-03-14&mid1=6&mid2=8'
-	oldWeekInfo = []
-	remainingWeekInfo = []
-	for dayLink in weekLinks:
-		driver.get(dayLink)
-		_wait_page_loads()
-		soup = BeautifulSoup(driver.page_source, 'lxml')
-	    tables = soup.find_all('table')
-	    dfs = pd.read_html(str(tables))
-	    print(dfs[2])
-	    
+
+    today = datetime.date.today()
+    oldWeekInfo = []
+    remainingWeekInfo = []
+
+    for dayLink in weekLinks:
+        dateString = dayLink.split('date=')[1].split('&')[0].split('-')
+        date = datetime.date(int(dateString[0]), int(dateString[1]), int(dateString[2]))
+        driver.get(dayLink)
+        _wait_page_loads()
+        soup = BeautifulSoup(driver.page_source, 'lxml')
+        tables = soup.find_all('table')
+        dfs = pd.read_html(str(tables))
+
+        if date < today:
+            oldWeekInfo.append(dfs[2])
+
+        else:
+            remainingWeekInfo.append(dfs[2])
+
+    return oldWeekInfo, remainingWeekInfo
 
 
 def _get_week_links(driver):
@@ -142,6 +160,7 @@ def connect(settings = {}):
 
     
 def getMatchupData(driver):
+
     _open_matchup(driver)
     resultInfo = _get_result_info(driver)
     weekLinks = _get_week_links(driver)

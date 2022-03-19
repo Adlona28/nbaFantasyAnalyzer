@@ -1,11 +1,14 @@
 import sys
-from predictMatchup import run
-		
+from leagueDataExtractor import load_settings, connect, getMatchupData, close
+
 if __name__ == "__main__":
-	
-	try:
-		run()
-	
-	except KeyboardInterrupt as ex:
-		sys.exit(0)
-	
+    
+    try:
+        user, password = load_settings()
+        driver = connect({'user_name': user, 'password': password})
+        resultInfo, oldWeekInfo, remainingWeekInfo = getMatchupData(driver)
+        close(driver)
+    
+    except KeyboardInterrupt as ex:
+        sys.exit(0)
+    
