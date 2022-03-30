@@ -44,7 +44,7 @@ def _getNbaStats():
     return df
 
 def _getPlayerName(player):
-    return ' '.join(player.split('Note')[1].split('-')[0].split()[0:-1])
+    return ' '.join(player.split('Notes')[-1].split('Note')[-1].split('-')[0].split()[0:-1])
 
 def _playsToday(inputString):
         return any(char.isdigit() for char in inputString)
@@ -104,23 +104,50 @@ def predictResult(resultInfo, remainingWeekInfo):
     remainingPlayersA, remainingPlayersB = _getRemainingPlayers(remainingWeekInfo)
     remainingA = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     for player in remainingPlayersA:
+        print(player)
+        print(remainingPlayersA[player])
+        print(stats.loc[player].values)
         playerRemainingStats = [remainingPlayersA[player]*float(x) for x in stats.loc[player].values]
         remainingA = [round(x + y, 1) for x, y in zip(remainingA, playerRemainingStats)]
-    print(remainingA)
+    
 
     remainingB = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     for player in remainingPlayersB:
         print(player)
         print(remainingPlayersB[player])
         print(stats.loc[player].values)
-        playerRemainingStats = [remainingPlayersB[player]*float(x) for x in stats.loc[player].values]
+        if len(stats.loc[player].values) != 2:
+            playerRemainingStats = [remainingPlayersB[player]*float(x) for x in stats.loc[player].values]
+        else:
+            playerRemainingStats = [remainingPlayersB[player]*float(x) for x in stats.loc[player].values[0]]
+
         remainingB = [round(x + y, 1) for x, y in zip(remainingB, playerRemainingStats)]
+
+    print("---------------------------------")
+    currentA = [float(i) for i in resultInfo.values[0]]
+    currentB = [float(i) for i in resultInfo.values[1]]
+    print(resultInfo.values)
+    print(remainingA)
     print(remainingB)
+    print(currentA)
+    print(currentB)
+    a = [x + y for (x, y) in zip(currentA, remainingA)]
+    b = [x + y for (x, y) in zip(currentB, remainingB)]
+    a = [a[0]/a[1], a[2]/a[3]] + a[4:]
+    b = [b[0]/b[1], b[2]/b[3]] + b[4:]
+    print(a)
+    print(b)
 
     
 
 if __name__ == "__main__":
 
     resultInfo = pd.read_csv('../resultInfo.csv')
-    remainingWeekInfo = [pd.read_csv('../remainingWeekInfo0.csv'), pd.read_csv('../remainingWeekInfo1.csv')]
+    remainingWeekInfo = [   
+                            pd.read_csv('../remainingWeekInfo0.csv'), 
+                            pd.read_csv('../remainingWeekInfo1.csv'), 
+                            pd.read_csv('../remainingWeekInfo2.csv'), 
+                            pd.read_csv('../remainingWeekInfo3.csv'),
+                            pd.read_csv('../remainingWeekInfo4.csv')
+                        ]
     predictResult(resultInfo,remainingWeekInfo)
